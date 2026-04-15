@@ -6,7 +6,7 @@ disable-model-invocation: true
 allowed-tools: "Bash(gh:*)"
 ---
 
-# Pisto — daily checkout
+# Daily checkout
 
 Raw GitHub activity (fetched live):
 
@@ -106,7 +106,7 @@ Write posts for each channel. If `--channel` was passed, write only that channel
 
 ```
 ────────────────────────────────────────────────────
-PISTO DAILY CHECKOUT · {username} · {date}
+DAILY CHECKOUT · {username} · {date}
 arc: {protagonist_arc}
 ────────────────────────────────────────────────────
 
