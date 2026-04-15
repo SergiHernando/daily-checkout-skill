@@ -19,7 +19,7 @@ gh api /user --jq '.login'
 Raw GitHub activity for the authenticated user (last 100 events):
 
 ```!
-gh api "/users/$(gh api /user --jq '.login')/events?per_page=100" --jq '.[] | "\(.created_at)  \(.type)  \(.repo.name)  \(if .type == "PushEvent" then (.payload.commits // [] | map(.message | split("\n")[0]) | join(" | ")) elif .type == "PullRequestEvent" then "\(.payload.action): \(.payload.pull_request.title)" elif .type == "PullRequestReviewEvent" then "review(\(.payload.review.state)): \(.payload.pull_request.title)" elif .type == "IssuesEvent" then "\(.payload.action): \(.payload.issue.title)" elif .type == "IssueCommentEvent" then "comment on: \(.payload.issue.title // \"?\")" else "(other)" end)"'
+gh api "/users/$(gh api /user --jq '.login')/events?per_page=100" --jq '.[] | "\(.created_at)  \(.type)  \(.repo.name)  \(if .type == "PushEvent" then (.payload.commits // [] | map(.message | split("\n")[0]) | join(" | ")) elif .type == "PullRequestEvent" then "\(.payload.action): \(.payload.pull_request.title)" elif .type == "PullRequestReviewEvent" then "review(\(.payload.review.state)): \(.payload.pull_request.title)" elif .type == "IssuesEvent" then "\(.payload.action): \(.payload.issue.title)" elif .type == "IssueCommentEvent" then "comment on: \(.payload.issue.title // "?")" else "(other)" end)"'
 ```
 
 ---
