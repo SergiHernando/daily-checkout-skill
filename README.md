@@ -49,4 +49,4 @@ No external API calls. The intelligence runs entirely within your Claude Code se
 
 ## License
 
-MIT
+[The Unlicense](LICENSE) — public domain, no attribution required.
