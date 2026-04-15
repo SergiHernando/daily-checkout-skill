@@ -39,7 +39,7 @@ Installs to `.claude/skills/daily-checkout/` in the current directory.
 
 ## How it works
 
-The skill uses `gh` CLI shell injection to fetch your raw GitHub events, then Claude reasons through three stages natively:
+The skill calls the `gh` CLI to fetch your raw GitHub events, then Claude reasons through three stages natively:
 
 1. **Signal extraction** — identifies work mode, commit themes, focus, collaboration
 2. **Intent inference** — infers what you were trying to accomplish, not just what you did

@@ -38,7 +38,7 @@ gh api "/users/$USER/events?per_page=100" \
 
 Your task is to turn the activity above into a narrative checkout. Work through three stages. Only output the final posts.
 
-## Stage 2 — Signal extraction (silent)
+## Stage 1 — Signal extraction (silent)
 
 Identify what kind of day this was from the raw events. Filter to the window requested in `arguments` (if `--date` given: that UTC day; if `--hours N`: last N hours; default: last 24 hours).
 
@@ -52,7 +52,7 @@ Derive:
 
 Keep this internal.
 
-## Stage 3 — Intent inference (silent)
+## Stage 2 — Intent inference (silent)
 
 From the signals, infer the underlying intent — not what was done, but what the engineer was trying to accomplish.
 
@@ -67,7 +67,7 @@ Identify:
 
 Keep this internal.
 
-## Stage 4 — Narrative posts
+## Stage 3 — Narrative posts
 
 Write posts for each channel. If `--channel` was passed, write only that channel. Otherwise write all three.
 
