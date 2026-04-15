@@ -61,7 +61,7 @@ class CommitTheme(str, Enum):
 class ThemeBreakdown(BaseModel):
     theme:   CommitTheme
     count:   int
-    share:   float   # 0–1
+    share:   float   # 0-1
 
 
 class RepoSignal(BaseModel):
@@ -94,7 +94,7 @@ class SignalBundle(BaseModel):
     # ── Focus ───────────────────────────────────────────────────────────────
     repos_touched:   list[str]
     repo_count:      int
-    focus_score:     float     # 0–1; 1 = all events on one repo
+    focus_score:     float     # 0-1; 1 = all events on one repo
     primary_repo:    Optional[str] = None
 
     # ── Commit semantics ────────────────────────────────────────────────────
@@ -105,11 +105,11 @@ class SignalBundle(BaseModel):
 
     # ── Momentum ────────────────────────────────────────────────────────────
     pr_momentum:      Optional[str] = None   # "opening" | "closing" | "reviewing" | "balanced"
-    hour_spread:      list[int]     = Field(default_factory=list)  # events per hour 0–23
+    hour_spread:      list[int]     = Field(default_factory=list)  # events per hour 0-23
     burst_hours:      list[int]     = Field(default_factory=list)  # hours with activity spike
 
     # ── Collaboration ───────────────────────────────────────────────────────
-    collaboration_index: float   # 0–1; share of events that are social (reviews, comments)
+    collaboration_index: float   # 0-1; share of events that are social (reviews, comments)
 
     # ── Per-repo detail ─────────────────────────────────────────────────────
     repo_signals: list[RepoSignal] = Field(default_factory=list)
@@ -391,7 +391,7 @@ def extract(activity: DailyActivity) -> SignalBundle:
 # ---------------------------------------------------------------------------
 
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Pista — Stage 2: signal extraction")
+    p = argparse.ArgumentParser(description="Pisto — Stage 2: signal extraction")
     p.add_argument("--in",  dest="input",  default="", help="Path to Stage 1 JSON (default: stdin)")
     p.add_argument("--out", dest="output", default="", help="Write signals JSON to file (default: stdout)")
     return p.parse_args()

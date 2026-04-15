@@ -72,7 +72,7 @@ class IntentFrame(BaseModel):
     # Core intent
     primary_intent:     IntentCluster
     secondary_intent:   Optional[IntentCluster] = None
-    confidence:         float                       # 0–1, LLM self-reported
+    confidence:         float                       # 0-1, LLM self-reported
 
     # Narrative levers
     emotional_register: EmotionalRegister
@@ -81,7 +81,7 @@ class IntentFrame(BaseModel):
     resolution:         Optional[str] = None  # what was resolved or advanced
 
     # Vocabulary for Stage 4 to use (nouns, not verbs — stage 4 picks the voice)
-    anchor_concepts:    list[str] = Field(default_factory=list)  # 3–5 key concepts
+    anchor_concepts:    list[str] = Field(default_factory=list)  # 3-5 key concepts
     named_artifacts:    list[str] = Field(default_factory=list)  # repos, PRs, issues worth naming
 
     # Raw LLM reasoning (kept for debugging / audit)
@@ -101,7 +101,7 @@ class IntentFrame(BaseModel):
 # ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = """\
-You are Pista, an AI that reads the traces of an engineer's day and \
+You are Pisto, an AI that reads the traces of an engineer's day and \
 infers the underlying intent — not what they did, but what they were \
 trying to accomplish.
 
@@ -117,7 +117,7 @@ Rules:
   middle of today?"
 - tension and resolution are optional — only populate them if the \
   signals clearly support it.
-- anchor_concepts should be the 3–5 domain concepts that matter, \
+- anchor_concepts should be the 3-5 domain concepts that matter, \
   derived from keywords and repo context.
 - named_artifacts should only include repos, PRs or issues worth \
   mentioning by name in a story (i.e. meaningful, not noise).
@@ -131,14 +131,14 @@ _SCHEMA_HINT = {
     "date": "YYYY-MM-DD",
     "primary_intent": "one of: hardening_boundary | shipping_capability | paying_down_debt | exploring_unknown | enabling_team | stabilising_prod | laying_foundations | consolidating_gains",
     "secondary_intent": "same enum or null",
-    "confidence": "float 0.0–1.0",
+    "confidence": "float 0.0-1.0",
     "emotional_register": "one of: urgent | exploratory | methodical | generative | collaborative",
     "protagonist_arc": "1 sentence, story framing",
     "tension": "string or null — the constraint or problem that drove the work",
     "resolution": "string or null — what was resolved or meaningfully advanced",
-    "anchor_concepts": ["3–5 domain concept strings"],
+    "anchor_concepts": ["3-5 domain concept strings"],
     "named_artifacts": ["repo names, PR titles, or issue summaries worth naming"],
-    "reasoning": "2–3 sentences explaining your reasoning",
+    "reasoning": "2-3 sentences explaining your reasoning",
 }
 
 
@@ -252,7 +252,7 @@ def infer(
 # ---------------------------------------------------------------------------
 
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Pista — Stage 3: intent inference")
+    p = argparse.ArgumentParser(description="Pisto — Stage 3: intent inference")
     p.add_argument("--in",          dest="input",       default="",                    help="Path to Stage 2 JSON (default: stdin)")
     p.add_argument("--out",         dest="output",      default="",                    help="Write intent JSON to file (default: stdout)")
     p.add_argument("--model",       dest="model",       default="claude-sonnet-4-6",   help="Claude model to use")

@@ -119,6 +119,37 @@ class GhCli:
         return data["login"]
 
     @classmethod
+    def repo_commits_in_range(
+        cls, repo: str, username: str, since: datetime, until: datetime
+    ) -> list[dict]:
+        """
+        Fetch commits from a specific repo filtered by author date (not push date).
+        Uses /repos/{repo}/commits with since/until — these are author-date aware.
+        Returns an empty list on any error (e.g. empty repo, no access).
+        """
+        since_str = since.strftime("%Y-%m-%dT%H:%M:%SZ")
+        until_str = until.strftime("%Y-%m-%dT%H:%M:%SZ")
+        collected: list[dict] = []
+        page = 1
+        while True:
+            try:
+                batch: list[dict] = cls._run([
+                    "api",
+                    f"/repos/{repo}/commits"
+                    f"?author={username}&since={since_str}&until={until_str}"
+                    f"&per_page={PER_PAGE}&page={page}",
+                ])
+            except RuntimeError:
+                break
+            if not batch:
+                break
+            collected.extend(batch)
+            if len(batch) < PER_PAGE:
+                break
+            page += 1
+        return collected
+
+    @classmethod
     def user_events(cls, username: str, since: datetime) -> list[dict]:
         """
         Fetch /users/{username}/events with pagination, stopping as soon as
@@ -317,22 +348,86 @@ def _aggregate(
 # Public entry point
 # ---------------------------------------------------------------------------
 
-def ingest(username: str = "", lookback_hours: int = DEFAULT_LOOKBACK_H) -> DailyActivity:
+def ingest(
+    username: str = "",
+    lookback_hours: int = DEFAULT_LOOKBACK_H,
+    date: Optional[str] = None,
+) -> DailyActivity:
     """
-    Fetch and normalise GitHub activity for `username` over the last
-    `lookback_hours`. If `username` is empty, resolves the authenticated user.
+    Fetch and normalise GitHub activity for `username`.
+
+    If `date` is given (YYYY-MM-DD, UTC), the window covers that full day
+    (00:00:00 - 23:59:59 UTC) and `lookback_hours` is ignored.
+    Otherwise the window is the last `lookback_hours` from now.
     """
-    now          = datetime.now(timezone.utc)
-    window_start = now - timedelta(hours=lookback_hours)
+    if date:
+        window_start = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        window_end   = window_start + timedelta(days=1) - timedelta(seconds=1)
+    else:
+        window_end   = datetime.now(timezone.utc)
+        window_start = window_end - timedelta(hours=lookback_hours)
 
-    resolved   = username or GhCli.whoami()
-    raw_events = GhCli.user_events(resolved, window_start)
+    resolved = username or GhCli.whoami()
 
-    normalised = [ev for r in raw_events for ev in normalise(r)]
-    normalised = [e for e in normalised if e.timestamp >= window_start]   # strict window
-    normalised.sort(key=lambda e: e.timestamp)                            # chronological
+    if date:
+        # For a specific date, the Events API timestamps reflect when code was
+        # *pushed*, not when commits were *authored* — so commits written on day X
+        # but pushed on day X+1 would be invisible.  Instead:
+        #   1. Use the Events API over a wider window to find which repos the user
+        #      touched around the target date (and capture non-commit events).
+        #   2. For each repo found in PushEvents, re-query via the Commits API
+        #      which filters by author date — this is what the GitHub UI shows.
+        discovery_start = window_start - timedelta(days=7)
+        raw_events = GhCli.user_events(resolved, discovery_start)
 
-    return _aggregate(resolved, normalised, window_start, now)
+        # Non-commit events: keep only those within the exact target day.
+        non_commit: list[RawEvent] = []
+        repos_with_pushes: set[str] = set()
+        for r in raw_events:
+            events = normalise(r)
+            for ev in events:
+                if ev.event_type == EventType.COMMIT:
+                    # Will be replaced by author-date-accurate calls below.
+                    repos_with_pushes.add(ev.repo)
+                elif window_start <= ev.timestamp <= window_end:
+                    non_commit.append(ev)
+            if r.get("type") == "PushEvent":
+                repos_with_pushes.add(r.get("repo", {}).get("name", ""))
+
+        # Fetch commits by author date for each repo.
+        commit_events: list[RawEvent] = []
+        for repo in repos_with_pushes:
+            if not repo:
+                continue
+            commits = GhCli.repo_commits_in_range(repo, resolved, window_start, window_end)
+            for c in commits:
+                commit_data = c.get("commit", {})
+                author_data = commit_data.get("author", {})
+                author_date_str = author_data.get("date", "")
+                try:
+                    ts = _parse_dt(author_date_str)
+                except (ValueError, TypeError):
+                    continue
+                if not (window_start <= ts <= window_end):
+                    continue
+                sha = c.get("sha", "")
+                commit_events.append(RawEvent(
+                    event_type=EventType.COMMIT,
+                    repo=repo,
+                    timestamp=ts,
+                    title=_snip(commit_data.get("message", "").split("\n")[0], 120),
+                    url=c.get("html_url"),
+                    metadata={"sha": sha[:8]},
+                ))
+
+        normalised = commit_events + non_commit
+    else:
+        raw_events = GhCli.user_events(resolved, window_start)
+        normalised = [ev for r in raw_events for ev in normalise(r)]
+        normalised = [e for e in normalised if window_start <= e.timestamp <= window_end]
+
+    normalised.sort(key=lambda e: e.timestamp)
+    return _aggregate(resolved, normalised, window_start, window_end)
 
 
 # ---------------------------------------------------------------------------
@@ -342,14 +437,15 @@ def ingest(username: str = "", lookback_hours: int = DEFAULT_LOOKBACK_H) -> Dail
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Stage 1 — GitHub activity ingest")
     p.add_argument("--user",  default="", help="GitHub username (default: authenticated user)")
-    p.add_argument("--hours", type=int, default=DEFAULT_LOOKBACK_H, help="Lookback window in hours")
+    p.add_argument("--hours", type=int, default=DEFAULT_LOOKBACK_H, help="Lookback window in hours (ignored when --date is set)")
+    p.add_argument("--date",  default="", help="Analyse a specific UTC day, e.g. 2026-04-14 (overrides --hours)")
     p.add_argument("--out",   default="", help="Write JSON to this file instead of stdout")
     return p.parse_args()
 
 
 if __name__ == "__main__":
     args     = _parse_args()
-    activity = ingest(username=args.user, lookback_hours=args.hours)
+    activity = ingest(username=args.user, lookback_hours=args.hours, date=args.date or None)
 
     # Summary + sample always go to stderr so they don't pollute the JSON pipe
     print(activity.summarise(), file=sys.stderr)

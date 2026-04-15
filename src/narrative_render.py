@@ -16,7 +16,7 @@ Usage:
     python narrative_render.py --in intent.json --out checkout.json
     python narrative_render.py --in intent.json --channel slack
 
-    # Full Pista pipeline:
+    # Full Pisto pipeline:
     python github_ingest.py \\
       | python signal_extract.py \\
       | python intent_infer.py \\
@@ -60,7 +60,7 @@ class DailyCheckout(BaseModel):
         divider = "─" * 60
         return (
             f"\n{divider}\n"
-            f"PISTA DAILY CHECKOUT · {self.username} · {self.date}\n"
+            f"PISTO DAILY CHECKOUT · {self.username} · {self.date}\n"
             f"intent: {self.intent}  |  arc: {self.arc}\n"
             f"{divider}\n\n"
             f"── SLACK ({self.slack.word_count} words) ──\n"
@@ -91,7 +91,7 @@ Rules that apply to ALL channels:
 _CHANNEL_PERSONAS: dict[str, dict] = {
     "slack": {
         "label": "Slack (internal team)",
-        "length": "80–130 words",
+        "length": "80-130 words",
         "tone": "candid and direct — you're talking to people who understand the codebase",
         "structure": "one paragraph, no hashtags, no emoji unless it adds meaning, "
                      "end with what's next or what's still open",
@@ -99,11 +99,11 @@ _CHANNEL_PERSONAS: dict[str, dict] = {
     },
     "linkedin": {
         "label": "LinkedIn",
-        "length": "150–220 words",
+        "length": "150-220 words",
         "tone": "reflective and specific — you're talking to peers and the broader tech community",
         "structure": "two or three short paragraphs. First paragraph: the insight or tension. "
                      "Second: what the work revealed. Third (optional): a broader takeaway or "
-                     "open question. End with 2–4 relevant hashtags.",
+                     "open question. End with 2-4 relevant hashtags.",
         "persona": "a CTO building in public — thoughtful, not self-promotional",
     },
     "x": {
@@ -123,7 +123,7 @@ _CHANNEL_PERSONAS: dict[str, dict] = {
 # ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = """\
-You are Pista, an AI that turns the traces of an engineer's day into \
+You are Pisto, an AI that turns the traces of an engineer's day into \
 narrative. You have already inferred the intent and arc behind the day. \
 Now your job is to write the actual posts — each shaped for its channel, \
 each telling a story with a point of view.
@@ -240,7 +240,7 @@ def render(
 # ---------------------------------------------------------------------------
 
 def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Pista — Stage 4: narrative render")
+    p = argparse.ArgumentParser(description="Pisto — Stage 4: narrative render")
     p.add_argument("--in",          dest="input",       default="",                    help="Path to Stage 3 JSON (default: stdin)")
     p.add_argument("--out",         dest="output",      default="",                    help="Write checkout JSON to file (default: stdout)")
     p.add_argument("--channel",     dest="channel",     default="",                    help="Render a single channel: slack | linkedin | x")

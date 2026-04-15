@@ -33,7 +33,8 @@ def _parse_args() -> argparse.Namespace:
         description="Pisto — GitHub activity → daily narrative checkout"
     )
     p.add_argument("--user",        default="",    help="GitHub username (default: authenticated user)")
-    p.add_argument("--hours",       default=24,    type=int,   help="Lookback window in hours (default: 24)")
+    p.add_argument("--hours",       default=24,    type=int,   help="Lookback window in hours (default: 24, ignored when --date is set)")
+    p.add_argument("--date",        default="",    help="Analyse a specific UTC day, e.g. 2026-04-14 (overrides --hours)")
     p.add_argument("--channel",     default="",    help="Render a single channel: slack | linkedin | x")
     p.add_argument("--out",         default="",    help="Write final JSON to file")
     p.add_argument("--save-stages", action="store_true", help="Save intermediate stage JSON files")
@@ -44,12 +45,13 @@ def _parse_args() -> argparse.Namespace:
 def run(
     username: str = "",
     hours: int = 24,
+    date: str = "",
     channel: str = "",
     model: str = "claude-sonnet-4-6",
 ) -> DailyCheckout:
 
     print("▶ Stage 1 — fetching GitHub activity…",   file=sys.stderr)
-    activity = ingest(username=username, lookback_hours=hours)
+    activity = ingest(username=username, lookback_hours=hours, date=date or None)
     print(f"  {activity.summarise()}",               file=sys.stderr)
 
     print("▶ Stage 2 — extracting signals…",         file=sys.stderr)
@@ -72,6 +74,7 @@ if __name__ == "__main__":
     checkout = run(
         username=args.user,
         hours=args.hours,
+        date=args.date,
         channel=args.channel,
         model=args.model,
     )
@@ -88,7 +91,7 @@ if __name__ == "__main__":
         from signal_extract import extract  as _extract
         from intent_infer   import infer    as _infer
 
-        activity = _ingest(username=args.user, lookback_hours=args.hours)
+        activity = _ingest(username=args.user, lookback_hours=args.hours, date=args.date or None)
         bundle   = _extract(activity)
         frame    = _infer(bundle, model=args.model)
 
