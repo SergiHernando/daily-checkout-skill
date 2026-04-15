@@ -8,35 +8,25 @@ allowed-tools: Bash(gh *)
 
 # Daily checkout
 
-Raw GitHub activity (fetched live):
+Arguments: $ARGUMENTS
+
+Authenticated GitHub user:
 
 ```!
-ARGS="$ARGUMENTS"
-USER=$(echo "$ARGS" | awk 'match($0, /--user ([^ ]+)/, a) {print a[1]}')
-[ -z "$USER" ] && USER=$(gh api /user --jq '.login')
-echo "user: $USER"
-echo "fetched: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-echo "arguments: $ARGS"
-echo "---"
-gh api "/users/$USER/events?per_page=100" \
-  --jq '.[] | "\(.created_at)  \(.type)  \(.repo.name)  \(
-    if .type == "PushEvent" then
-      (.payload.commits // [] | map(.message | split("\n")[0]) | join(" | "))
-    elif .type == "PullRequestEvent" then
-      "\(.payload.action): \(.payload.pull_request.title)"
-    elif .type == "PullRequestReviewEvent" then
-      "review(\(.payload.review.state)): \(.payload.pull_request.title)"
-    elif .type == "IssuesEvent" then
-      "\(.payload.action): \(.payload.issue.title)"
-    elif .type == "IssueCommentEvent" then
-      "comment on: \(.payload.issue.title // \"?\")"
-    else "(other)" end
-  )"'
+gh api /user --jq '.login'
+```
+
+Raw GitHub activity for the authenticated user (last 100 events):
+
+```!
+gh api "/users/$(gh api /user --jq '.login')/events?per_page=100" --jq '.[] | "\(.created_at)  \(.type)  \(.repo.name)  \(if .type == "PushEvent" then (.payload.commits // [] | map(.message | split("\n")[0]) | join(" | ")) elif .type == "PullRequestEvent" then "\(.payload.action): \(.payload.pull_request.title)" elif .type == "PullRequestReviewEvent" then "review(\(.payload.review.state)): \(.payload.pull_request.title)" elif .type == "IssuesEvent" then "\(.payload.action): \(.payload.issue.title)" elif .type == "IssueCommentEvent" then "comment on: \(.payload.issue.title // \"?\")" else "(other)" end)"'
 ```
 
 ---
 
 Your task is to turn the activity above into a narrative checkout. Work through three stages. Only output the final posts.
+
+If `--user` was passed in the arguments and it differs from the authenticated user above, fetch that user's events yourself using `gh api "/users/{username}/events?per_page=100"` with the same jq filter, and use that data instead.
 
 ## Stage 1 — Signal extraction (silent)
 
