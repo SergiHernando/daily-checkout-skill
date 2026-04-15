@@ -3,6 +3,7 @@ name: daily-checkout
 description: Generate a daily narrative checkout from your GitHub activity. Produces ready-to-post Slack, LinkedIn, and X copy by inferring the intent and story arc behind your commits, PRs, and reviews. Run it at end of day.
 argument-hint: "[--date YYYY-MM-DD] [--user USERNAME] [--hours N] [--channel slack|linkedin|x]"
 disable-model-invocation: true
+allowed-tools: "Bash(gh:*)"
 ---
 
 # Pisto — daily checkout
