@@ -19,14 +19,13 @@ That's it. No Python, no API keys, no setup.
 
 ## Install
 
+From the root of any project:
+
 ```bash
-git clone https://github.com/SergiHernando/daily-checkout-skill.git
-cd daily-checkout-skill
+curl -fsSL https://raw.githubusercontent.com/SergiHernando/daily-checkout-skill/main/scripts/install.sh | sh
 ```
 
-Then open Claude Code in this directory. The skill is available immediately.
-
-Or copy `.claude/` into any existing project to use it there.
+Installs to `.claude/skills/daily-checkout/` in the current directory.
 
 ## Usage
 
