@@ -25,7 +25,7 @@ From the root of any project:
 curl -fsSL https://raw.githubusercontent.com/SergiHernando/daily-checkout-skill/main/scripts/install.sh | sh
 ```
 
-Installs to `.claude/skills/daily-checkout/` in the current directory.
+Installs to `~/.claude/skills/daily-checkout/` (user-level, available in all projects).
 
 ## Usage
 
